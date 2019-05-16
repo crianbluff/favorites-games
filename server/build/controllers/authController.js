@@ -12,38 +12,89 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = __importDefault(require("../database"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const helpers_1 = __importDefault(require("../lib/helpers"));
+const handlebars_1 = __importDefault(require("../lib/handlebars"));
 class AuthController {
-    list(req, res) {
+    register(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const games = yield database_1.default.query('SELECT * FROM games');
-            res.json(games);
+            const { username, password, fullname } = req.body;
+            const newUser = {
+                username,
+                password,
+                fullname
+            };
+            newUser.password = yield helpers_1.default.encryptPassword(password);
+            console.log(newUser);
+            yield database_1.default.query('INSERT INTO users SET ?', [newUser]);
+            res.json({ message: 'Usuario Creado' });
         });
     }
-    getOne(req, res) {
+    login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            const games = yield database_1.default.query('SELECT * FROM games WHERE id = ?', [id]);
-            games.length > 0 ? res.json(games[0]) : res.status(404).json({ text: "The game doesn't exists" });
+            const { username, password } = req.body;
+            const rows = yield database_1.default.query('SELECT * FROM users WHERE username = ?', [username]);
+            if (rows.length > 0) {
+                const user = rows[0];
+                console.log(user);
+                const validPassword = yield helpers_1.default.matchPassword(password, user.password);
+                if (validPassword) {
+                    const userMy = {
+                        username,
+                        password,
+                    };
+                    let time = user.created_at;
+                    let setTime = handlebars_1.default.timeago(time);
+                    user['setTime'] = setTime;
+                    console.log(userMy);
+                    let timeExpiresIn = '20s';
+                    jsonwebtoken_1.default.sign({
+                        user: userMy
+                    }, 'secretkey', { expiresIn: timeExpiresIn }, (err, token) => {
+                        res.json({
+                            Authorization: {
+                                token,
+                                expiredIn: timeExpiresIn,
+                            },
+                            user: user,
+                            message: 'Logeado'
+                        });
+                    });
+                }
+                else {
+                    res.json({ message: 'La contraseña esta mal' });
+                }
+            }
+            else {
+                res.json({ message: 'El usuario no existe' });
+            }
         });
     }
-    create(req, res) {
+    users(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.default.query('INSERT INTO games SET ?', [req.body]);
-            res.json({ message: 'Game Saved' });
+            yield jsonwebtoken_1.default.verify(req.token, 'secretkey', (err, authData) => __awaiter(this, void 0, void 0, function* () {
+                if (err) {
+                    res.status(403).send({
+                        message: err.message,
+                    });
+                }
+                else {
+                    const user = yield database_1.default.query('SELECT * FROM users WHERE username = ?', [authData.user.username]);
+                    console.log(user);
+                    res.json({
+                        authData
+                    });
+                }
+            }));
         });
     }
-    update(req, res) {
+    test(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            yield database_1.default.query('UPDATE games SET ? WHERE id = ?', [req.body, id]);
-            res.json({ message: 'The game was updated' });
-        });
-    }
-    delete(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            yield database_1.default.query('DELETE FROM games WHERE id = ?', [id]);
-            res.json({ message: 'The game was deleted' });
+            console.log(req.body);
+            // console.log(hola());
+            res.json({
+                message: 'test'
+            });
         });
     }
 }

@@ -4,7 +4,7 @@ import pool from '../database';
 class GamesController {
 
   public async list (req:Request, res:Response) {
-    const games = await pool.query('SELECT * FROM games'); 
+    const games = await pool.query('SELECT * FROM games');
     res.json(games);
   }
 

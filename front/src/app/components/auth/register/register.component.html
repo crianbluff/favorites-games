@@ -1,0 +1,12 @@
+<div class="login">
+  <div class="login-triangle"></div>
+  
+  <h2 class="login-header">Create an account</h2>
+
+  <form #frmRegister="ngForm" class="login-container" (ngSubmit)="onRegister(frmRegister)">
+    <p><input name="username" type="text" placeholder="Username" ngModel></p>
+    <p><input name="password" type="password" placeholder="Password" ngModel></p>
+    <p><input name="fullname" type="text" placeholder="Fullname" ngModel></p>
+    <p><input type="submit" value="Log in"></p>
+  </form>
+</div>

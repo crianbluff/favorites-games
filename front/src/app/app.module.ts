@@ -4,7 +4,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 // Rutas
-import { APP_ROUTING  } from './app.routes';
+// import { APP_ROUTING  } from './app.routes';
+import { AppRoutingModule  } from './app-routing.module';
 
 // Servicios
 import { GamesService } from './services/games.service'
@@ -26,7 +27,8 @@ import { GameListComponent } from './components/game-list/game-list.component';
 
   imports: [
     BrowserModule,
-    APP_ROUTING,
+    // APP_ROUTING,
+    AppRoutingModule,
     HttpClientModule,
     FormsModule
   ],
